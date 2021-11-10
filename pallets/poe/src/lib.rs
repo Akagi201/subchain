@@ -43,6 +43,8 @@ pub mod pallet {
 		ClaimCreated(T::AccountId, Vec<u8>),
 		/// Event emitted when a claim is revoked by the owner. [who, claim]
 		ClaimRevoked(T::AccountId, Vec<u8>),
+		/// Event emitted when a claim is transferred by the owner. [from_who, to_who, claim]
+		ClaimTransferred(T::AccountId, T::AccountId, Vec<u8>),
 	}
 
 	// Errors inform users that something went wrong.
@@ -104,6 +106,38 @@ pub mod pallet {
 
 			// Emit an event that the claim was erased.
 			Self::deposit_event(Event::ClaimRevoked(sender, proof));
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn transfer_claim(
+			origin: OriginFor<T>,
+			to: T::AccountId,
+			proof: Vec<u8>,
+		) -> DispatchResult {
+			// Check that the extrinsic was signed and get the signer.
+			// This function will return an error if the extrinsic is not signed.
+			// https://docs.substrate.io/v3/runtime/origins
+			let sender = ensure_signed(origin)?;
+
+			// Verify that the specified proof has been claimed.
+			ensure!(Proofs::<T>::contains_key(&proof), Error::<T>::NoSuchProof);
+
+			// Get owner of the claim.
+			let (owner, block_number) = Proofs::<T>::get(&proof);
+
+			// Verify that sender of the current call is the claim owner.
+			ensure!(sender == owner, Error::<T>::NotProofOwner);
+
+			// Remove claim from storage.
+			Proofs::<T>::try_mutate(&proof, |v| -> DispatchResult {
+				*v = (to.clone(), block_number);
+				Ok(())
+			})?;
+
+			// Emit an event that the claim was transferred.
+			Self::deposit_event(Event::ClaimTransferred(sender, to, proof));
 
 			Ok(())
 		}
