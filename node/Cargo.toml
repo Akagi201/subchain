@@ -1,17 +1,17 @@
 [package]
-name = 'node-template'
-version = '4.0.0-dev'
-description = 'A fresh FRAME-based Substrate node, ready for hacking.'
 authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
-homepage = 'https://substrate.io/'
+build = 'build.rs'
+description = 'A fresh FRAME-based Substrate node with some experiment pallets.'
 edition = '2021'
+homepage = 'https://substrate.io/'
 license = 'Unlicense'
+name = 'subchain'
 publish = false
 repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
-build = 'build.rs'
+version = '4.0.0-dev'
 
 [[bin]]
-name = 'node-template'
+name = 'subchain'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
