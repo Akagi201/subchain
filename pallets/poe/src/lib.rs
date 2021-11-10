@@ -7,7 +7,7 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
+	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use sp_std::vec::Vec;
 
@@ -24,11 +24,12 @@ pub mod pallet {
 
 	// The pallet's runtime storage items.
 	// https://docs.substrate.io/v3/runtime/storage
-	#[pallet::storage]
 	// Learn more about declaring storage items:
 	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
+	#[pallet::storage]
+	#[pallet::getter(fn proofs)]
 	pub(super) type Proofs<T: Config> =
-		StorageMap<_, Blake2_128Concat, Vec<u8>, (T::AccountId, T::BlockNumber), ValueQuery>;
+		StorageMap<_, Blake2_128Concat, Vec<u8>, (T::AccountId, T::BlockNumber)>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
@@ -64,7 +65,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(1_000)]
-		pub fn create_claim(origin: OriginFor<T>, proof: Vec<u8>) -> DispatchResult {
+		pub fn create_claim(origin: OriginFor<T>, proof: Vec<u8>) -> DispatchResultWithPostInfo {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
@@ -82,21 +83,19 @@ pub mod pallet {
 			// Emit an event that the claim was created.
 			Self::deposit_event(Event::ClaimCreated(sender, proof));
 
-			Ok(())
+			Ok(().into())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn revoke_claim(origin: OriginFor<T>, proof: Vec<u8>) -> DispatchResult {
+		pub fn revoke_claim(origin: OriginFor<T>, proof: Vec<u8>) -> DispatchResultWithPostInfo {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let sender = ensure_signed(origin)?;
 
 			// Verify that the specified proof has been claimed.
-			ensure!(Proofs::<T>::contains_key(&proof), Error::<T>::NoSuchProof);
-
 			// Get owner of the claim.
-			let (owner, _) = Proofs::<T>::get(&proof);
+			let (owner, _) = Proofs::<T>::get(&proof).ok_or(Error::<T>::NoSuchProof)?;
 
 			// Verify that sender of the current call is the claim owner.
 			ensure!(sender == owner, Error::<T>::NotProofOwner);
@@ -107,7 +106,7 @@ pub mod pallet {
 			// Emit an event that the claim was erased.
 			Self::deposit_event(Event::ClaimRevoked(sender, proof));
 
-			Ok(())
+			Ok(().into())
 		}
 
 		#[pallet::weight(10_000)]
@@ -115,31 +114,29 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			to: T::AccountId,
 			proof: Vec<u8>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let sender = ensure_signed(origin)?;
 
 			// Verify that the specified proof has been claimed.
-			ensure!(Proofs::<T>::contains_key(&proof), Error::<T>::NoSuchProof);
-
 			// Get owner of the claim.
-			let (owner, block_number) = Proofs::<T>::get(&proof);
+			let (owner, block_number) = Proofs::<T>::get(&proof).ok_or(Error::<T>::NoSuchProof)?;
 
 			// Verify that sender of the current call is the claim owner.
 			ensure!(sender == owner, Error::<T>::NotProofOwner);
 
 			// Remove claim from storage.
-			Proofs::<T>::try_mutate(&proof, |v| -> DispatchResult {
-				*v = (to.clone(), block_number);
-				Ok(())
+			Proofs::<T>::try_mutate(&proof, |v| -> DispatchResultWithPostInfo {
+				*v = Some((to.clone(), block_number));
+				Ok(().into())
 			})?;
 
 			// Emit an event that the claim was transferred.
 			Self::deposit_event(Event::ClaimTransferred(sender, to, proof));
 
-			Ok(())
+			Ok(().into())
 		}
 	}
 }
