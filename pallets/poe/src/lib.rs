@@ -22,6 +22,14 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		/// The minimum length a name may be.
+		#[pallet::constant]
+		type MinLength: Get<u32>;
+
+		/// The maximum length a name may be.
+		#[pallet::constant]
+		type MaxLength: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -63,6 +71,10 @@ pub mod pallet {
 		NoSuchProof,
 		/// The proof is claimed by another account, so caller can't revoke it.
 		NotProofOwner,
+		/// The proof is too short.
+		ProofTooShort,
+		/// The proof is too long.
+		ProofTooLong,
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -76,6 +88,9 @@ pub mod pallet {
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let sender = ensure_signed(origin)?;
+
+			ensure!(proof.len() >= T::MinLength::get() as usize, Error::<T>::ProofTooShort);
+			ensure!(proof.len() <= T::MaxLength::get() as usize, Error::<T>::ProofTooLong);
 
 			// Verify that the specified proof has not already been claimed.
 			ensure!(!Proofs::<T>::contains_key(&proof), Error::<T>::ProofAlreadyClaimed);
@@ -98,6 +113,9 @@ pub mod pallet {
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let sender = ensure_signed(origin)?;
+
+			ensure!(proof.len() >= T::MinLength::get() as usize, Error::<T>::ProofTooShort);
+			ensure!(proof.len() <= T::MaxLength::get() as usize, Error::<T>::ProofTooLong);
 
 			// Verify that the specified proof has been claimed.
 			// Get owner of the claim.
@@ -125,6 +143,9 @@ pub mod pallet {
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let sender = ensure_signed(origin)?;
+
+			ensure!(proof.len() >= T::MinLength::get() as usize, Error::<T>::ProofTooShort);
+			ensure!(proof.len() <= T::MaxLength::get() as usize, Error::<T>::ProofTooLong);
 
 			// Verify that the specified proof has been claimed.
 			// Get owner of the claim.

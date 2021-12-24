@@ -325,9 +325,21 @@ impl pallet_template::Config for Runtime {
 	type Event = Event;
 }
 
+// Add this code block to your template for Poe:
+parameter_types! {
+	pub const MinPoeProofLength: u32 = 1;
+	pub const MaxPoeProofLength: u32 = 32;
+}
+
 /// Configure the pallet-poe in pallets/poe.
 impl pallet_poe::Config for Runtime {
 	type Event = Event;
+
+	// Use the MinPoeProofLength from the parameter_types block.
+	type MinLength = MinPoeProofLength;
+
+	// Use the MaxPoeProofLength from the parameter_types block.
+	type MaxLength = MaxPoeProofLength;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.

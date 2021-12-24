@@ -34,6 +34,14 @@ Proof Of Existence
 
 ![after_transfer_claim](assets/after_transfer_claim.png)
 
+## 存证过长
+
+![pallet_poe_proof_too_long](assets/pallet_poe_proof_too_long.jpeg)
+
+## POE 单元测试
+
+![pallet_poe_test](assets/pallet_poe_test.png)
+
 ## Substrate tutorial
 
 * [POE](https://docs.substrate.io/tutorials/v3/proof-of-existence/)
