@@ -1,6 +1,6 @@
 use crate as pallet_poe;
 use sp_core::H256;
-use frame_support::parameter_types;
+use frame_support::{parameter_types, traits::ConstU32};
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup}, testing::Header,
 };
@@ -54,6 +54,8 @@ impl system::Config for Test {
 
 impl pallet_poe::Config for Test {
 	type Event = Event;
+	type MinLength = ConstU32<1>;
+	type MaxLength = ConstU32<32>;
 }
 
 // BUild genesis storage according to the mock runtime.
