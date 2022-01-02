@@ -91,6 +91,8 @@ pub mod pallet {
 		KittyBidPriceTooLow,
 		/// Ensures that an account has enough funds to purchase a Kitty.
 		NotEnoughBalance,
+		/// Ensures that breed kitties not the same.
+		BreedSameParent,
 		/// Ensures that the kitty index is valid.
 		InvalidKittyIndex,
 		/// Ensures that your free balance is enough.
@@ -168,6 +170,7 @@ pub mod pallet {
 		///
 		/// The actual kitty creation is done in the `mint()` function.
 		#[pallet::weight(100)]
+		#[transactional]
 		pub fn create_kitty(origin: OriginFor<T>) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			T::Currency::reserve(&sender, T::ReserveForCreateKitty::get()).map_err(|_| Error::<T>::InvalidReserveAmount)?;
@@ -293,6 +296,8 @@ pub mod pallet {
 			parent2: T::KittyIndex,
 		) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
+
+			ensure!(parent1 != parent2, Error::<T>::BreedSameParent);
 
 			// Check: Verify `sender` owns both kitties (and both kitties exist).
 			ensure!(Self::is_kitty_owner(&parent1, &sender)?, <Error<T>>::NotKittyOwner);
