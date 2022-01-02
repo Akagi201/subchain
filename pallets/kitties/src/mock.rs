@@ -33,7 +33,7 @@ parameter_types! {
 }
 
 impl frame_system::Config for Test {
-	type AccountData = pallet_balances::AccountData<u64>;
+	type AccountData = pallet_balances::AccountData<u128>;
 	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockHashCount = BlockHashCount;
@@ -59,12 +59,12 @@ impl frame_system::Config for Test {
 }
 
 parameter_types! {
-	pub const ExistentialDeposit: u64 = 1;
+	pub const ExistentialDeposit: u128 = 1;
 }
 
 impl pallet_balances::Config for Test {
 	type AccountStore = System;
-	type Balance = u64;
+	type Balance = u128;
 	type DustRemoval = ();
 	type Event = Event;
 	type ExistentialDeposit = ExistentialDeposit;
@@ -77,6 +77,7 @@ impl pallet_balances::Config for Test {
 parameter_types! {
 	// One can owned at most 9,999 Kitties
 	pub const MaxKittyOwned: u32 = 9999;
+	pub const ReserveForCreateKitty: u128 = 10_000;
 }
 
 impl pallet_kitties::Config for Test {
@@ -84,6 +85,15 @@ impl pallet_kitties::Config for Test {
 	type Currency = Balances;
 	type KittyRandomness = RandomnessCollectiveFlip;
 	type MaxKittyOwned = MaxKittyOwned;
+	type KittyIndex = u32;
+	type ReserveForCreateKitty = ReserveForCreateKitty;
+}
+
+#[macro_export]
+macro_rules! assert_has_event {
+	($x:expr) => {
+		System::assert_has_event(TestEvent::SubstrateKitties($x))
+	};
 }
 
 impl pallet_randomness_collective_flip::Config for Test {}
@@ -92,7 +102,7 @@ pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	GenesisConfig {
 		balances: BalancesConfig {
-			balances: vec![(1,  10), (2,  10)]
+			balances: vec![(1,  100_000), (2,  10_000), (3, 9_000)],
 		},
 		substrate_kitties: SubstrateKittiesConfig {
 			kitties: vec![
