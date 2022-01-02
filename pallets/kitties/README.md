@@ -15,6 +15,7 @@
 ```bash
 cargo test -p pallet-kitties -- --nocapture # make println! in test works
 ```
+
 ## 测试结果
 
 ![pallet_kitties_test](assets/pallet_kitties_test.png)

@@ -64,8 +64,10 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxKittyOwned: Get<u32>;
 
+		/// The type of Kitty ID
 		type KittyIndex: Parameter + AtLeast32BitUnsigned + Default + Copy + Bounded + CheckedAdd;
 
+		/// The staking balance when create_kitty
 		#[pallet::constant]
 		type ReserveForCreateKitty: Get<BalanceOf<Self>>;
 	}
@@ -152,7 +154,7 @@ pub mod pallet {
 		fn build(&self) {
 			// When building a kitty from genesis config, we require the dna and gender to be supplied.
 			for (acct, dna, gender) in &self.kitties {
-				let _ = <Pallet<T>>::mint(acct, Some(dna.clone()), Some(gender.clone()));
+				let _ = <Pallet<T>>::mint(acct, Some(*dna), Some(gender.clone()));
 			}
 		}
 	}
@@ -197,7 +199,7 @@ pub mod pallet {
 
 			let mut kitty = Self::kitties(&kitty_id).ok_or(<Error<T>>::KittyNotExist)?;
 
-			kitty.price = new_price.clone();
+			kitty.price = new_price;
 			<Kitties<T>>::insert(&kitty_id, kitty);
 
 			Self::deposit_event(Event::PriceSet(sender, kitty_id, new_price));
@@ -259,7 +261,7 @@ pub mod pallet {
 			if let Some(ask_price) = kitty.price {
 				ensure!(ask_price <= bid_price, <Error<T>>::KittyBidPriceTooLow);
 			} else {
-				Err(<Error<T>>::KittyNotForSale)?;
+				return Err(<Error<T>>::KittyNotForSale.into());
 			}
 
 			// Check the buyer has enough free balance
@@ -271,7 +273,7 @@ pub mod pallet {
 				<Error<T>>::ExceedMaxKittyOwned
 			);
 
-			let seller = kitty.owner.clone();
+			let seller = kitty.owner;
 
 			// Transfer the amount from buyer to seller
 			T::Currency::transfer(&buyer, &seller, bid_price, ExistenceRequirement::KeepAlive)?;
