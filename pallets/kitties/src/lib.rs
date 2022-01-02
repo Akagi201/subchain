@@ -95,8 +95,6 @@ pub mod pallet {
 		NotEnoughBalance,
 		/// Ensures that breed kitties not the same.
 		BreedSameParent,
-		/// Ensures that the kitty index is valid.
-		InvalidKittyIndex,
 		/// Ensures that your free balance is enough.
 		InvalidReserveAmount,
 	}
