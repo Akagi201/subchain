@@ -75,6 +75,19 @@ fn create_kitty_not_enough_balance_should_fail() {
 }
 
 #[test]
+fn create_kitty_exceed_max_kitty_owned_should_fail() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(1)));
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(1)));
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(1)));
+		assert_noop!(
+			SubstrateKitties::create_kitty(Origin::signed(1)),
+			Error::<Test>::ExceedMaxKittyOwned
+		);
+	});
+}
+
+#[test]
 fn create_kitty_count_overflow_should_fail() {
 	new_test_ext().execute_with(|| {
 		KittyCnt::<Test>::put(u32::max_value());
@@ -103,6 +116,17 @@ fn transfer_kitty_should_work() {
 		let new_id = SubstrateKitties::kitties_owned(3)[0];
 		// and it has the same hash
 		assert_eq!(kitty_id, new_id);
+	});
+}
+
+#[test]
+fn transfer_kitty_to_self_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_noop!(
+			SubstrateKitties::transfer(Origin::signed(1), 1, kitty_id),
+			Error::<Test>::TransferToSelf
+		);
 	});
 }
 
@@ -175,6 +199,7 @@ fn set_price_should_work() {
 	new_test_ext().execute_with(|| {
 		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
 		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(1)));
+		assert_has_event!(Event::<Test>::PriceSet(1, kitty_id, Some(1)));
 		assert_eq!(SubstrateKitties::kitties(kitty_id).unwrap().price, Some(1));
 	});
 }
@@ -196,6 +221,19 @@ fn buy_kitty_should_work() {
 		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
 		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(1)));
 		assert_ok!(SubstrateKitties::buy_kitty(Origin::signed(2), kitty_id, 1));
+		assert_has_event!(Event::<Test>::Bought(2, 1, kitty_id, 1));
+	});
+}
+
+#[test]
+fn buy_kitty_is_owner_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(1)));
+		assert_noop!(
+			SubstrateKitties::buy_kitty(Origin::signed(1), kitty_id, 1),
+			Error::<Test>::BuyerIsKittyOwner
+		);
 	});
 }
 
