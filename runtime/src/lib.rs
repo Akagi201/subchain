@@ -348,6 +348,7 @@ impl pallet_poe::Config for Runtime {
 parameter_types! {
 	// One can own at most 9999 Kitties.
 	pub const MaxKittyOwned: u32 = 9999;
+	pub const ReserveForCreateKitty: u128 = 1_000;
 }
 
 /// Configure the pallet-kitties in pallets/kitties
@@ -356,6 +357,8 @@ impl pallet_kitties::Config for Runtime {
 	type Currency = Balances;
 	type KittyRandomness = RandomnessCollectiveFlip;
 	type MaxKittyOwned = MaxKittyOwned;
+	type KittyIndex = u32;
+	type ReserveForCreateKitty = ReserveForCreateKitty;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
