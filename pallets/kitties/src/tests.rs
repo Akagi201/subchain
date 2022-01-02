@@ -7,7 +7,11 @@ use crate::mock::{
 	new_test_ext, Event as TestEvent, Origin, SubstrateKitties, System, Test,
 };
 
-use frame_support::{assert_ok, assert_noop};
+use frame_support::{
+	assert_ok,
+	assert_noop,
+	assert_err,
+};
 
 #[test]
 fn should_build_genesis_kitties() {
@@ -70,17 +74,18 @@ fn create_kitty_not_enough_balance_should_fail() {
 	});
 }
 
-// #[test]
-// fn create_kitty_count_overflow_should_fail() {
-// 	new_test_ext().execute_with(|| {
-// 		KittyCnt::<Test>::put(u32::max_value());
-// 		// create a kitty with account #1.
-// 		assert_noop!(
-// 			SubstrateKitties::create_kitty(Origin::signed(1)),
-// 			Error::<Test>::KittyCntOverflow
-// 		);
-// 	});
-// }
+#[test]
+fn create_kitty_count_overflow_should_fail() {
+	new_test_ext().execute_with(|| {
+		KittyCnt::<Test>::put(u32::max_value());
+		// create a kitty with account #1.
+		assert_err!(SubstrateKitties::create_kitty(Origin::signed(1)), Error::<Test>::KittyCntOverflow);
+		assert_noop!(
+			SubstrateKitties::create_kitty(Origin::signed(1)),
+			Error::<Test>::KittyCntOverflow
+		);
+	});
+}
 
 #[test]
 fn transfer_kitty_should_work() {
@@ -89,6 +94,7 @@ fn transfer_kitty_should_work() {
 
 		// acct 1 send kitty to acct 3
 		assert_ok!(SubstrateKitties::transfer(Origin::signed(1), 3, kitty_id));
+		assert_has_event!(Event::<Test>::Transferred(1, 3, kitty_id));
 
 		// acct 1 now has 0 kitty
 		assert_eq!(SubstrateKitties::kitties_owned(1).len(), 0);
@@ -109,6 +115,121 @@ fn transfer_non_owned_kitty_should_fail() {
 		assert_noop!(
 			SubstrateKitties::transfer(Origin::signed(9), 2, hash),
 			Error::<Test>::NotKittyOwner
+		);
+	});
+}
+
+#[test]
+fn breed_kitty_should_work() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(1)));
+		let kitty_id1= SubstrateKitties::kitties_owned(1)[0];
+		let kitty_id2= SubstrateKitties::kitties_owned(1)[1];
+
+		assert_ok!(SubstrateKitties::breed_kitty(Origin::signed(1), kitty_id1, kitty_id2));
+		assert_eq!(SubstrateKitties::kitties_owned(1).len(), 3);
+	});
+}
+
+#[test]
+fn breed_kitty_same_parent_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id= SubstrateKitties::kitties_owned(1)[0];
+
+		assert_noop!(
+			SubstrateKitties::breed_kitty(Origin::signed(1), kitty_id, kitty_id),
+			Error::<Test>::BreedSameParent
+		);
+	});
+}
+
+#[test]
+fn breed_kitty_not_exist_should_fail() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(SubstrateKitties::create_kitty(Origin::signed(1)));
+		let kitty_id1= SubstrateKitties::kitties_owned(1)[0];
+		let kitty_id2= SubstrateKitties::kitties_owned(1)[1];
+
+		assert_noop!(
+			SubstrateKitties::breed_kitty(Origin::signed(2), kitty_id1, kitty_id2),
+			Error::<Test>::NotKittyOwner
+		);
+	});
+}
+
+#[test]
+fn breed_kitty_not_own_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id1= 12345;
+		let kitty_id2= 54321;
+
+		assert_noop!(
+			SubstrateKitties::breed_kitty(Origin::signed(1), kitty_id1, kitty_id2),
+			Error::<Test>::KittyNotExist
+		);
+	});
+}
+
+#[test]
+fn set_price_should_work() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(1)));
+		assert_eq!(SubstrateKitties::kitties(kitty_id).unwrap().price, Some(1));
+	});
+}
+
+#[test]
+fn set_price_not_own_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_noop!(
+			SubstrateKitties::set_price(Origin::signed(2), kitty_id, Some(1)),
+			Error::<Test>::NotKittyOwner
+		);
+	});
+}
+
+#[test]
+fn buy_kitty_should_work() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(1)));
+		assert_ok!(SubstrateKitties::buy_kitty(Origin::signed(2), kitty_id, 1));
+	});
+}
+
+#[test]
+fn buy_kitty_low_price_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(2)));
+		assert_noop!(
+			SubstrateKitties::buy_kitty(Origin::signed(2), kitty_id, 1),
+			Error::<Test>::KittyBidPriceTooLow
+		);
+	});
+}
+
+#[test]
+fn buy_kitty_not_for_sale_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_noop!(
+			SubstrateKitties::buy_kitty(Origin::signed(2), kitty_id, 1),
+			Error::<Test>::KittyNotForSale
+		);
+	});
+}
+
+#[test]
+fn buy_kitty_not_enough_balance_should_fail() {
+	new_test_ext().execute_with(|| {
+		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
+		assert_ok!(SubstrateKitties::set_price(Origin::signed(1), kitty_id, Some(2)));
+		assert_noop!(
+			SubstrateKitties::buy_kitty(Origin::signed(2), kitty_id, 200_000),
+			Error::<Test>::NotEnoughBalance
 		);
 	});
 }
