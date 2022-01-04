@@ -19,3 +19,24 @@ cargo test -p pallet-kitties -- --nocapture # make println! in test works
 ## 测试结果
 
 ![pallet_kitties_test](assets/pallet_kitties_test.png)
+
+## 参考资料
+
+runtime 中绑定 kittyindex
+
+* <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/balances/src/lib.rs#L233>
+* <https://github.com/substrate-developer-hub/substrate-node-template/blob/v3.0.0%2Bmonthly-2021-10/runtime/src/lib.rs#L246>
+
+检查 event
+
+* <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/balances/src/tests.rs#L728-L755>
+
+检查错误类型
+
+* <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/balances/src/tests.rs#L148-L166>
+
+质押
+
+* <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/proxy/src/lib.rs#L123>
+* <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/proxy/src/lib.rs#L327>
+* <https://github.com/paritytech/substrate/blob/monthly-2021-10/bin/node/runtime/src/lib.rs#L319>
