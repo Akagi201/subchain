@@ -105,15 +105,15 @@ fn transfer_kitty_should_work() {
 	new_test_ext().execute_with(|| {
 		let kitty_id = SubstrateKitties::kitties_owned(1)[0];
 
-		// acct 1 send kitty to acct 3
-		assert_ok!(SubstrateKitties::transfer(Origin::signed(1), 3, kitty_id));
-		assert_has_event!(Event::<Test>::Transferred(1, 3, kitty_id));
+		// acct 1 send kitty to acct 2
+		assert_ok!(SubstrateKitties::transfer(Origin::signed(1), 2, kitty_id));
+		assert_has_event!(Event::<Test>::Transferred(1, 2, kitty_id));
 
 		// acct 1 now has 0 kitty
 		assert_eq!(SubstrateKitties::kitties_owned(1).len(), 0);
-		// but acct 3 does
-		assert_eq!(SubstrateKitties::kitties_owned(3).len(), 1);
-		let new_id = SubstrateKitties::kitties_owned(3)[0];
+		// but acct 2 does
+		assert_eq!(SubstrateKitties::kitties_owned(2).len(), 2);
+		let new_id = SubstrateKitties::kitties_owned(2)[1];
 		// and it has the same hash
 		assert_eq!(kitty_id, new_id);
 	});

@@ -173,7 +173,6 @@ pub mod pallet {
 		#[transactional]
 		pub fn create_kitty(origin: OriginFor<T>) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
-			T::Currency::reserve(&sender, T::ReserveForCreateKitty::get()).map_err(|_| Error::<T>::InvalidReserveAmount)?;
 			let kitty_id = Self::mint(&sender, None, None)?;
 			// Logging to the console
 			log::info!("A kitty is born with ID: {:?}.", kitty_id);
@@ -368,6 +367,7 @@ pub mod pallet {
 			// 	},
 			// 	None => 1u32.into(),
 			// };
+			T::Currency::reserve(owner, T::ReserveForCreateKitty::get()).map_err(|_| Error::<T>::InvalidReserveAmount)?;
 			let new_cnt = match Self::kitty_cnt() {
 				Some(cnt) => {
 					cnt.checked_add(&One::one()).ok_or(<Error<T>>::KittyCntOverflow)?
@@ -401,6 +401,9 @@ pub mod pallet {
 			let mut kitty = Self::kitties(&kitty_id).ok_or(<Error<T>>::KittyNotExist)?;
 
 			let prev_owner = kitty.owner.clone();
+
+			T::Currency::reserve(to, T::ReserveForCreateKitty::get()).map_err(|_| Error::<T>::InvalidReserveAmount)?;
+			T::Currency::unreserve(&prev_owner, T::ReserveForCreateKitty::get());
 
 			// Remove `kitty_id` from the KittyOwned vector of `prev_kitty_owner`
 			<KittiesOwned<T>>::try_mutate(&prev_owner, |owned| {

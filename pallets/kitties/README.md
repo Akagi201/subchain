@@ -20,6 +20,11 @@ cargo test -p pallet-kitties -- --nocapture # make println! in test works
 
 ![pallet_kitties_test](assets/pallet_kitties_test.png)
 
+## 优秀作业
+
+* 樊鹏飞: <https://github.com/xingfly/rust_pro_2/tree/master/pallets/kitties>
+* 罗小龙: <https://github.com/yangluo1024/substrate-homeworks/tree/master/kitties-node/pallets/kitties>
+
 ## 参考资料
 
 runtime 中绑定 kittyindex
@@ -40,3 +45,7 @@ runtime 中绑定 kittyindex
 * <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/proxy/src/lib.rs#L123>
 * <https://github.com/paritytech/substrate/blob/monthly-2021-10/frame/proxy/src/lib.rs#L327>
 * <https://github.com/paritytech/substrate/blob/monthly-2021-10/bin/node/runtime/src/lib.rs#L319>
+
+Rust 关联类型
+
+* <https://doc.rust-lang.org/book/ch19-03-advanced-traits.html
