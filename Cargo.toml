@@ -3,6 +3,9 @@ members = [
   'node',
   'pallets/template',
   'pallets/poe',
+  'pallets/kitties',
+  'pallets/offchain-worker',
+  'pallets/offchain-indexing',
   'runtime',
 ]
 [profile.release]
