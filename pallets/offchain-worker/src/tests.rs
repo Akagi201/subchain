@@ -236,6 +236,8 @@ fn should_submit_signed_transaction_on_chain() {
 	});
 }
 
+#[allow(clippy::clone_on_copy)]
+#[allow(clippy::useless_conversion)]
 #[test]
 fn should_submit_unsigned_transaction_on_chain_for_any_account() {
 	const PHRASE: &str =
@@ -296,6 +298,8 @@ fn should_submit_unsigned_transaction_on_chain_for_any_account() {
 	});
 }
 
+#[allow(clippy::clone_on_copy)]
+#[allow(clippy::useless_conversion)]
 #[test]
 fn should_submit_unsigned_transaction_on_chain_for_all_accounts() {
 	const PHRASE: &str =

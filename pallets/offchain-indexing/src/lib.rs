@@ -354,7 +354,7 @@ pub mod pallet {
 
 			// Deserializing JSON to struct, thanks to `serde` and `serde_derive`
 			let info: HackerNewsInfo =
-			serde_json::from_str(&resp_str).map_err(|_| <Error<T>>::DeserializeToObjError)?;
+			serde_json::from_str(resp_str).map_err(|_| <Error<T>>::DeserializeToObjError)?;
 			Ok(info)
 		}
 

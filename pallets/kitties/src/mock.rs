@@ -2,7 +2,10 @@
 
 use crate as pallet_kitties;
 use pallet_kitties::Gender;
-use frame_support::parameter_types;
+use frame_support::{
+	parameter_types,
+	traits::ConstU32,
+};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -56,6 +59,7 @@ impl frame_system::Config for Test {
 	type SS58Prefix = SS58Prefix;
 	type SystemWeightInfo = ();
 	type Version = ();
+	type MaxConsumers = ConstU32<16>;
 }
 
 parameter_types! {

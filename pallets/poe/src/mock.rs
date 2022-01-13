@@ -2,7 +2,7 @@ use crate as pallet_poe;
 use sp_core::H256;
 use frame_support::{
 	parameter_types,
-	// traits::ConstU32,
+	traits::ConstU32,
 };
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup}, testing::Header,
@@ -53,6 +53,7 @@ impl system::Config for Test {
 	type SystemWeightInfo = ();
 	type SS58Prefix = SS58Prefix;
 	type OnSetCode = ();
+	type MaxConsumers = ConstU32<16>;
 }
 
 parameter_types! {
