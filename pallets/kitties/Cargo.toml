@@ -88,9 +88,14 @@ version = '4.0.0-dev'
 
 [features]
 default = ['std']
-runtime-benchmarks = ['frame-benchmarking']
+runtime-benchmarks = [
+	'frame-benchmarking',
+	'frame-support/runtime-benchmarks',
+	'frame-system/runtime-benchmarks',
+]
 std = [
   'codec/std',
+  'log/std',
   'scale-info/std',
   'frame-support/std',
   'frame-system/std',
@@ -98,5 +103,7 @@ std = [
   'pallet-balances/std',
   'pallet-randomness-collective-flip/std',
   'sp-std/std',
+  'sp-core/std',
+  'serde/std',
 ]
 try-runtime = ['frame-support/try-runtime']
