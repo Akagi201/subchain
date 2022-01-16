@@ -1,5 +1,5 @@
 [package]
-name = "offchain-worker"
+name = "pallet-offchain-worker"
 version = "4.0.0-dev"
 authors = ["Akagi201 <https://github.com/Akagi201>"]
 edition = "2021"
@@ -66,6 +66,7 @@ default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 tag = 'monthly-2022-01'
 version = '0.10.0-dev'
+optional = true
 
 [dependencies.sp-std]
 default-features = false
@@ -83,7 +84,7 @@ std = [
 	"lite-json/std",
 	"sp-core/std",
 	"sp-io/std",
-	"sp-keystore/std",
+	"sp-keystore",
 	"sp-runtime/std",
 	"sp-std/std",
 	"log/std",

@@ -22,6 +22,7 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
+use codec::Encode;
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -48,6 +49,9 @@ pub use pallet_poe;
 
 /// Import the kitties pallet.
 pub use pallet_kitties;
+
+/// Import pallet offchain worker.
+pub use pallet_offchain_worker;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -363,6 +367,77 @@ impl pallet_kitties::Config for Runtime {
 	type ReserveForCreateKitty = ReserveForCreateKitty;
 }
 
+parameter_types! {
+	pub const GracePeriod: BlockNumber = 1 as u32;
+	pub const UnsignedInterval: u32 = 1 as u32;
+	pub const UnsignedPriority: u32 = (1 << 20) as u32;
+}
+
+/// Configure the pallet-offchain-workers in pallets/offchain-workers
+impl pallet_offchain_worker::Config for Runtime {
+	type AuthorityId = pallet_offchain_worker::crypto::TestAuthId;
+	type Call = Call;
+	type Event = Event;
+	type GracePeriod = GracePeriod;
+	type UnsignedInterval = UnsignedInterval;
+	type UnsignedPriority = UnsignedPriority;
+}
+
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+	Call: From<LocalCall>,
+{
+	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		call: Call,
+		public: <Signature as sp_runtime::traits::Verify>::Signer,
+		account: AccountId,
+		index: Index,
+	) -> Option<(Call, <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload)> {
+		let period = BlockHashCount::get() as u64;
+		// The `System::block_number` is initialized with `n+1`,
+		// so the actual block number is `n`.
+		// TODO: why build failed
+		// let current_block = System::block_number()
+		// 	.saturated_into::<u64>()
+		// 	.saturating_sub(1);
+		let current_block = System::block_number()
+			.saturating_sub(1) as u64;
+		let tip = 0;
+		let extra: SignedExtra = (
+			frame_system::CheckSpecVersion::<Runtime>::new(),
+			frame_system::CheckTxVersion::<Runtime>::new(),
+			frame_system::CheckGenesis::<Runtime>::new(),
+			frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			frame_system::CheckNonce::<Runtime>::from(index),
+			frame_system::CheckWeight::<Runtime>::new(),
+			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+		);
+
+		let raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				log::warn!("Unable to create signed payload: {:?}", e);
+			})
+			.ok()?;
+		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+		let address = account;
+		let (call, extra, _) = raw_payload.deconstruct();
+		Some((call, (sp_runtime::MultiAddress::Id(address), signature.into(), extra)))
+	}
+}
+
+impl frame_system::offchain::SigningTypes for Runtime {
+	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = Signature;
+}
+
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+	Call: From<C>,
+{
+	type OverarchingCall = Call;
+	type Extrinsic = UncheckedExtrinsic;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -384,6 +459,7 @@ construct_runtime!(
 		PoeModule: pallet_poe,
 		// Include the kitties logic from the pallet-kitties in the runtime.
 		SubstrateKitties: pallet_kitties,
+		OffchainWorker: pallet_offchain_worker,
 		Nicks: pallet_nicks,
 	}
 );
@@ -414,6 +490,8 @@ pub type Executive = frame_executive::Executive<
 	Runtime,
 	AllPalletsWithSystem,
 >;
+/// The payload being signed in transactions.
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
 impl_runtime_apis! {
 	impl sp_api::Core<Block> for Runtime {

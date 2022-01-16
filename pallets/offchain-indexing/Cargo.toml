@@ -1,5 +1,5 @@
 [package]
-name = "offchain-indexing"
+name = "pallet-offchain-indexing"
 version = "4.0.0-dev"
 authors = ["Akagi201 <https://github.com/Akagi201>"]
 edition = "2021"

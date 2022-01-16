@@ -168,7 +168,7 @@ fn knows_how_to_mock_several_http_calls() {
 		let mut state = state.write();
 		state.expect_request(testing::PendingRequest {
 			method: "GET".into(),
-			uri: "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD".into(),
+			uri: "https://min-api.cryptocompare.com/data/price?fsym=DOT&tsyms=USD".into(),
 			response: Some(br#"{"USD": 1}"#.to_vec()),
 			sent: true,
 			..Default::default()
@@ -176,7 +176,7 @@ fn knows_how_to_mock_several_http_calls() {
 
 		state.expect_request(testing::PendingRequest {
 			method: "GET".into(),
-			uri: "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD".into(),
+			uri: "https://min-api.cryptocompare.com/data/price?fsym=DOT&tsyms=USD".into(),
 			response: Some(br#"{"USD": 2}"#.to_vec()),
 			sent: true,
 			..Default::default()
@@ -184,7 +184,7 @@ fn knows_how_to_mock_several_http_calls() {
 
 		state.expect_request(testing::PendingRequest {
 			method: "GET".into(),
-			uri: "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD".into(),
+			uri: "https://min-api.cryptocompare.com/data/price?fsym=DOT&tsyms=USD".into(),
 			response: Some(br#"{"USD": 3}"#.to_vec()),
 			sent: true,
 			..Default::default()
@@ -392,7 +392,7 @@ fn should_submit_raw_unsigned_transaction_on_chain() {
 fn price_oracle_response(state: &mut testing::OffchainState) {
 	state.expect_request(testing::PendingRequest {
 		method: "GET".into(),
-		uri: "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD".into(),
+		uri: "https://min-api.cryptocompare.com/data/price?fsym=DOT&tsyms=USD".into(),
 		response: Some(br#"{"USD": 155.23}"#.to_vec()),
 		sent: true,
 		..Default::default()

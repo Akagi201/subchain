@@ -34,7 +34,7 @@
 //! ## Overview
 //!
 //! In this example we are going to build a very simplistic, naive and definitely NOT
-//! production-ready oracle for BTC/USD price.
+//! production-ready oracle for DOT/USD price.
 //! Offchain Worker (OCW) will be triggered after every block, fetch the current price
 //! and prepare either signed or unsigned transaction to feed the result back on chain.
 //! The on-chain logic will simply aggregate the results and store last `64` values to compute
@@ -42,7 +42,6 @@
 //! Additional logic in OCW is put in place to prevent spamming the network with both signed
 //! and unsigned transactions, and custom `UnsignedValidator` makes sure that there is only
 //! one unsigned transaction floating in the network.
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
@@ -78,7 +77,7 @@ mod tests;
 /// When offchain worker is signing transactions it's going to request keys of type
 /// `KeyTypeId` from the keystore and use the ones it finds to sign the transaction.
 /// The keys can be inserted manually via RPC (see `author_insertKey`).
-pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"btc!");
+pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"dot!");
 
 /// Based on the above `KeyTypeId` we need to generate a pallet-specific crypto type wrappers.
 /// We can use from supported crypto kinds (`sr25519`, `ed25519` and `ecdsa`) and augment
@@ -195,7 +194,10 @@ pub mod pallet {
 			// For this example we are going to send both signed and unsigned transactions
 			// depending on the block number.
 			// Usually it's enough to choose one or the other.
-			let should_send = Self::choose_transaction_type(block_number);
+			// let should_send = Self::choose_transaction_type(block_number);
+			// 指定一个签名者对交易进行签名，然后将未签名的交易发送到区块链上
+			// 与签名交易的主要区别在于，不会向签名人账户收取交易费，并且对 payload 进行了签名，保证了数据来源可靠。
+			let should_send = TransactionType::UnsignedForAny;
 			let res = match should_send {
 				TransactionType::Signed => Self::fetch_price_and_send_signed(),
 				TransactionType::UnsignedForAny =>
@@ -356,6 +358,7 @@ impl<T: SigningTypes> SignedPayload<T> for PricePayload<T::Public, T::BlockNumbe
 	}
 }
 
+#[allow(unused)]
 enum TransactionType {
 	Signed,
 	UnsignedForAny,
@@ -371,9 +374,11 @@ impl<T: Config> Pallet<T> {
 	/// and local storage usage.
 	///
 	/// Returns a type of transaction that should be produced in current run.
+	#[allow(unused)]
 	fn choose_transaction_type(block_number: T::BlockNumber) -> TransactionType {
 		/// A friendlier name for the error that is going to be returned in case we are in the grace
 		/// period.
+		#[allow(unused)]
 		const RECENTLY_SENT: () = ();
 
 		// Start off by creating a reference to Local Storage value.
@@ -525,7 +530,7 @@ impl<T: Config> Pallet<T> {
 					signature,
 				},
 			)
-			.ok_or("No local accounts accounts available.")?;
+			.ok_or("No local accounts available.")?;
 		result.map_err(|()| "Unable to submit transaction")?;
 
 		Ok(())
@@ -577,7 +582,7 @@ impl<T: Config> Pallet<T> {
 		// since we are running in a custom WASM execution environment we can't simply
 		// import the library here.
 		let request =
-			http::Request::get("https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD");
+			http::Request::get("https://min-api.cryptocompare.com/data/price?fsym=DOT&tsyms=USD");
 		// We set the deadline for sending of the request, note that awaiting response can
 		// have a separate deadline. Next we send the request, before that it's also possible
 		// to alter request headers or stream body content in case of non-GET requests.
@@ -642,9 +647,9 @@ impl<T: Config> Pallet<T> {
 
 	/// Add new price to the list.
 	fn add_price(maybe_who: Option<T::AccountId>, price: u32) {
-		log::info!("Adding to the average: {}", price);
+		log::warn!("Adding to the average: {}", price);
 		<Prices<T>>::mutate(|prices| {
-			const MAX_LEN: usize = 64;
+			const MAX_LEN: usize = 10;
 
 			if prices.len() < MAX_LEN {
 				prices.push(price);
@@ -655,7 +660,7 @@ impl<T: Config> Pallet<T> {
 
 		let average = Self::average_price()
 			.expect("The average is not empty, because it was just mutated; qed");
-		log::info!("Current average price is: {}", average);
+		log::warn!("Current prices are: {:?}, average price is: {}", Self::current_prices().unwrap(), average);
 		// here we are raising the NewPrice event
 		Self::deposit_event(Event::NewPrice { price, maybe_who });
 	}
@@ -667,6 +672,15 @@ impl<T: Config> Pallet<T> {
 			None
 		} else {
 			Some(prices.iter().fold(0_u32, |a, b| a.saturating_add(*b)) / prices.len() as u32)
+		}
+	}
+
+	fn current_prices() -> Option<Vec<u32>> {
+		let prices = <Prices<T>>::get();
+		if prices.is_empty() {
+			None
+		} else {
+			Some(prices.to_vec())
 		}
 	}
 
