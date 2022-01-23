@@ -15,3 +15,7 @@ cargo build --release
   > 注意：需要开启代理
 
 ![offchain_worker_prices](assets/offchain_worker_prices.png)
+
+## Refs
+
+参考: <https://github.com/tsurog/substrate-ocw/blob/main/assignment/pallets/ocw/src/lib.rs>
