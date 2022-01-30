@@ -17,3 +17,9 @@ cargo build --release
 ```bash
 ./target/release/subchain --chain=subchain_testnet_raw.json
 ```
+
+or
+
+```bash
+./target/release/subchain --chain=subchain_testnet
+```
